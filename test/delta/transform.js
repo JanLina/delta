@@ -15,10 +15,15 @@ describe('transform()', () => {
   it('insert + retain', () => {
     const a = new Delta().insert('A');
     const b = new Delta().retain(1, { bold: true, color: 'red' });
+    // ab'
     const expected = new Delta()
       .retain(1)
       .retain(1, { bold: true, color: 'red' });
     expect(a.transform(b, true)).toEqual(expected);
+    // ba'
+    const expected2 = new Delta()
+      .insert('A');
+    expect(b.transform(a, true)).toEqual(expected2);
   });
 
   it('insert + delete', () => {

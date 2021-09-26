@@ -392,10 +392,10 @@ class Delta {
     return inverted.chop();
   }
 
-  // 返回值： transform 后的 other，即 other'
+  // 函数含义：other 基于 this 做转换，返回 other'
+  // 注意：compose(this, other') = compose(other, this')，合并的时候，被 transform 的那个必须放在后面，因为它是基于前者的转换结果
   // 参数说明：priority === true 表示 this 的优先级大于 other，即 this 先发生
   // 从代码可以看出，priority 只有在 this 和 other 都是 insert 的时候用得到（还有合并 attrs 的时候）
-  // TODO_X 所以其他任何组合情况，谁先谁后都一样？？？？
   transform(index: number, priority?: boolean): number;
   transform(other: Delta, priority?: boolean): Delta;
   transform(arg: number | Delta, priority = false): typeof arg {
