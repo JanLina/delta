@@ -10,6 +10,10 @@ interface Op {
 }
 
 namespace Op {
+  // 返回值：某 op 的长度
+  // delete：删除了几个字符
+  // retain：跳过了几个字符
+  // insert：插入了几个字符
   export function length(op: Op): number {
     if (typeof op.delete === 'number') {
       return op.delete;

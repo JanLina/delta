@@ -392,6 +392,10 @@ class Delta {
     return inverted.chop();
   }
 
+  // 返回值： transform 后的 other，即 other'
+  // 参数说明：priority === true 表示 this 的优先级大于 other，即 this 先发生
+  // 从代码可以看出，priority 只有在 this 和 other 都是 insert 的时候用得到（还有合并 attrs 的时候）
+  // TODO_X 所以其他任何组合情况，谁先谁后都一样？？？？
   transform(index: number, priority?: boolean): number;
   transform(other: Delta, priority?: boolean): Delta;
   transform(arg: number | Delta, priority = false): typeof arg {
@@ -402,26 +406,35 @@ class Delta {
     const other: Delta = arg;
     const thisIter = new OpIterator(this.ops);
     const otherIter = new OpIterator(other.ops);
-    const delta = new Delta();
+    const delta = new Delta();  // 存储结果
     while (thisIter.hasNext() || otherIter.hasNext()) {
       if (
         thisIter.peekType() === 'insert' &&
         (priority || otherIter.peekType() !== 'insert')
       ) {
+        // this 是 insert && （other 不是 insert ｜｜ this 的优先级更高）
         delta.retain(Op.length(thisIter.next()));
       } else if (otherIter.peekType() === 'insert') {
+        // other 是 insert
         delta.push(otherIter.next());
       } else {
+        // this 和 other 都不是 insert
+        // 从 this 和 other 取出 Math.min(this.length, other.length) 的长度
         const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
         const thisOp = thisIter.next(length);
         const otherOp = otherIter.next(length);
         if (thisOp.delete) {
           // Our delete either makes their delete redundant or removes their retain
+          // this 是 delete，如果 other 是 delete / retain，都会失效（在这个分支里 other 已经不可能是 insert 了）
+          // 所以直接抛弃这部分 other
           continue;
         } else if (otherOp.delete) {
+          // other 是 delete，如果 other 是 delete / retain，都会失效；
+          // other' 自然也是 delete
           delta.push(otherOp);
         } else {
           // We retain either their retain or insert
+          // this 和 other 都是 retain，other' 自然也是 retain
           delta.retain(
             length,
             AttributeMap.transform(

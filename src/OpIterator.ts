@@ -8,13 +8,14 @@ export default class Iterator {
   constructor(ops: Op[]) {
     this.ops = ops;
     this.index = 0;
-    this.offset = 0;
+    this.offset = 0;  // 调用 next 的时候可能一次只取这个 op 的一部分，offset 负责记录这个 op 已经被取走了多少
   }
 
   hasNext(): boolean {
     return this.peekLength() < Infinity;
   }
 
+  // 参数说明：length 表示取下一个 op 的多少长度
   next(length?: number): Op {
     if (!length) {
       length = Infinity;
@@ -24,6 +25,7 @@ export default class Iterator {
       const offset = this.offset;
       const opLength = Op.length(nextOp);
       if (length >= opLength - offset) {
+        // length 超过该 op 剩余长度，取出 op 剩余所有
         length = opLength - offset;
         this.index += 1;
         this.offset = 0;
